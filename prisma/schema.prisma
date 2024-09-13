@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define the User model
+model User {
+  id          Int            @id @default(autoincrement())
+  email       String         @unique
+  password    String
+  name        String?
+  tasksTaken  Ticket[]       @relation("UserTickets")
+  friends     UserFriend[]   @relation("UserFriendsAsUser")
+
+  // Timestamps
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  UserFriend UserFriend[] @relation("UserFriendsAsFriend")
+}
+
+// Define the Ticket model
+model Ticket {
+  id        Int    @id @default(autoincrement())
+  task      String
+  taken     Int    @default(0)
+  userId    Int?
+  user      User?  @relation("UserTickets", fields: [userId], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Define the UserFriend model to represent user friendships
+model UserFriend {
+  id         Int    @id @default(autoincrement())
+  userId     Int
+  friendId   Int
+  user       User   @relation("UserFriendsAsUser", fields: [userId], references: [id])
+  friend     User   @relation("UserFriendsAsFriend", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}
